@@ -1,15 +1,12 @@
-import { HeaderAPIKeyStrategy } from 'passport-headerapikey';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { ConfigService } from '@nestjs/config';
+import { StaticBearerStrategy } from './static-bearer.strategy';
 
 @Injectable()
-export class ApiKeyStrategy extends PassportStrategy(HeaderAPIKeyStrategy, 'api-key') {
-  constructor(private authService: AuthService, private configService: ConfigService) {
-    const headerKeyApiKey = configService.get<string>('HEADER_KEY_API_KEY') || '';
-
-    super({ header: headerKeyApiKey, prefix: '' }, true, async (apiKey, done) => {
+export class ApiKeyStrategy extends PassportStrategy(StaticBearerStrategy, 'api-key') {
+  constructor(private authService: AuthService) {
+    super({ },true, async (apiKey: string, done: (arg0: UnauthorizedException, arg1: boolean) => void) => {
       if (this.authService.validateApiKey(apiKey)) {
         done(null, true);
       }

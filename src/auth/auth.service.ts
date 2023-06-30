@@ -7,6 +7,6 @@ export class AuthService {
 
   validateApiKey(apiKey: string) {
     const apiKeys: string[] = this.configService.get<string>('API_KEY')?.split(',') || [];
-    return apiKeys.find((key) => apiKey == key);
+    return apiKeys.find((key) => apiKey == key || apiKey == `Bearer ${key}`);
   }
 }
