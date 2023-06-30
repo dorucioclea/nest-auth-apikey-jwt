@@ -4,7 +4,7 @@ import { AuthService } from '../auth.service';
 import { StaticBearerStrategy } from './static-bearer.strategy';
 
 @Injectable()
-export class ApiKeyStrategy extends PassportStrategy(StaticBearerStrategy, 'api-key') {
+export class WrappingStaticBearerStrategy extends PassportStrategy(StaticBearerStrategy, 'static-bearer') {
   constructor(private authService: AuthService) {
     super({ },true, async (apiKey: string, done: (arg0: UnauthorizedException, arg1: boolean) => void) => {
       if (this.authService.validateApiKey(apiKey)) {
