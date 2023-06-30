@@ -19,10 +19,10 @@ class InnerStaticBearerStrategy extends PassportStrategy {
 
     staticAuthorizationHeader: { header: string } = { header: 'Authorization' };
     name: string;
-    verify: (apiKey: string, verified: (err: Error | null, user?: Object, info?: Object) => void, req?: Request) => void;
+    verify: (apiKey: string, verified: (error: UnauthorizedException, success: boolean) => void) => void;
     passReqToCallback: boolean;
 
-    constructor(verify: (apiKey: string, verified: (err: Error | null, user?: Object, info?: Object) => void, req?: Request) => void) {
+    constructor(verify: (apiKey: string, verified: (error: UnauthorizedException, success: boolean) => void) => void) {
         super();
         this.staticAuthorizationHeader.header = this.staticAuthorizationHeader.header.toLowerCase();
 
@@ -36,17 +36,17 @@ class InnerStaticBearerStrategy extends PassportStrategy {
             return this.fail(new BadRequestError('Missing static bearer key'), null);
         }
 
-        let verified = (err: Error | null, user?: Object, info?: Object) => {
-            if (err) {
-                return this.error(err);
+        let verified = (error: UnauthorizedException, success: boolean) => {
+            if (error) {
+                return this.error(error);
             }
-            if (!user) {
-                return this.fail(info, null);
+            if (!success) {
+                return this.fail({}, null);
             }
-            this.success(user, info);
+            this.success(true, {});
         };
 
-        this.verify(apiKey, verified, ...[]);
+        this.verify(apiKey, verified);
     }
 }
 
