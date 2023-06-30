@@ -1,9 +1,12 @@
 import * as _ from 'lodash';
 import { Request } from 'express';
 import { Strategy as PassportStrategy } from 'passport-strategy';
+import { PassportStrategy as WrappingStrategy} from '@nestjs/passport';
 import { BadRequestError } from '../../errors/bad-request.error';
+import { AuthService } from '../auth.service';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-export class StaticBearerStrategy extends PassportStrategy {
+class InnerStaticBearerStrategy extends PassportStrategy {
 
     staticAuthorizationHeader: { header: string, };
     name: string;
@@ -42,4 +45,17 @@ export class StaticBearerStrategy extends PassportStrategy {
         if (this.passReqToCallback) optionalCallbackParams.push(req);
         this.verify(apiKey, verified, ...optionalCallbackParams);
     }
+}
+
+
+@Injectable()
+export class StaticBearerStrategy extends WrappingStrategy(InnerStaticBearerStrategy, 'static-bearer') {
+  constructor(private authService: AuthService) {
+    super({ },true, async (apiKey: string, done: (arg0: UnauthorizedException, arg1: boolean) => void) => {
+      if (this.authService.validateApiKey(apiKey)) {
+        done(null, true);
+      }
+      done(new UnauthorizedException(), null);
+    });
+  }
 }

@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { WrappingStaticBearerStrategy } from './strategy/bearer.strategy';
+import { StaticBearerStrategy } from './strategy/static-bearer.strategy';
 
 @Module({
   imports: [
     PassportModule
   ],
-  providers: [AuthService, WrappingStaticBearerStrategy],
+  providers: [AuthService, StaticBearerStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
