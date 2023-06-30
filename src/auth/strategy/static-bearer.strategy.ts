@@ -2,9 +2,18 @@ import * as _ from 'lodash';
 import { Request } from 'express';
 import { Strategy as PassportStrategy } from 'passport-strategy';
 import { PassportStrategy as WrappingStrategy} from '@nestjs/passport';
-import { BadRequestError } from '../../errors/bad-request.error';
-import { AuthService } from '../auth.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+class BadRequestError implements Error {
+    name: string;
+    message: string;
+
+    constructor(message: string) {
+        this.name = 'BadRequestError';
+        this.message = message;
+    }
+}
 
 class InnerStaticBearerStrategy extends PassportStrategy {
 
@@ -44,12 +53,17 @@ class InnerStaticBearerStrategy extends PassportStrategy {
 
 @Injectable()
 export class StaticBearerStrategy extends WrappingStrategy(InnerStaticBearerStrategy, 'static-bearer') {
-  constructor(private authService: AuthService) {
+  constructor(private configService: ConfigService) {
     super(async (apiKey: string, done: (arg0: UnauthorizedException, arg1: boolean) => void) => {
-      if (this.authService.validateApiKey(apiKey)) {
+      if (this.validate(apiKey)) {
         done(null, true);
       }
       done(new UnauthorizedException(), null);
     });
   }
+
+    validate(apiKey: string): boolean {
+        const apiKeys: string[] = this.configService.get<string>('API_KEY')?.split(',') || ['demo-apikey'];
+        return !!apiKeys.find((key) => apiKey == key || apiKey == `Bearer ${key}`);
+    }
 }
