@@ -8,21 +8,17 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 class InnerStaticBearerStrategy extends PassportStrategy {
 
-    staticAuthorizationHeader: { header: string, };
+    staticAuthorizationHeader: { header: string } = { header: 'Authorization' };
     name: string;
     verify: (apiKey: string, verified: (err: Error | null, user?: Object, info?: Object) => void, req?: Request) => void;
     passReqToCallback: boolean;
 
-    constructor(header: { header: string, prefix: string }, passReqToCallback: boolean,
-                verify: (apiKey: string, verified: (err: Error | null, user?: Object, info?: Object) => void, req?: Request) => void) {
+    constructor(verify: (apiKey: string, verified: (err: Error | null, user?: Object, info?: Object) => void, req?: Request) => void) {
         super();
-        this.staticAuthorizationHeader = header || { header: 'Authorization', prefix: '' };
-        if (!this.staticAuthorizationHeader.header) this.staticAuthorizationHeader.header = 'Authorization';
         this.staticAuthorizationHeader.header = this.staticAuthorizationHeader.header.toLowerCase();
 
         this.name = 'static-bearer';
         this.verify = verify;
-        this.passReqToCallback = passReqToCallback || false;
     }
 
     authenticate(req: Request, options?: Object): void {
@@ -41,9 +37,7 @@ class InnerStaticBearerStrategy extends PassportStrategy {
             this.success(user, info);
         };
 
-        const optionalCallbackParams = [];
-        if (this.passReqToCallback) optionalCallbackParams.push(req);
-        this.verify(apiKey, verified, ...optionalCallbackParams);
+        this.verify(apiKey, verified, ...[]);
     }
 }
 
@@ -51,7 +45,7 @@ class InnerStaticBearerStrategy extends PassportStrategy {
 @Injectable()
 export class StaticBearerStrategy extends WrappingStrategy(InnerStaticBearerStrategy, 'static-bearer') {
   constructor(private authService: AuthService) {
-    super({ },true, async (apiKey: string, done: (arg0: UnauthorizedException, arg1: boolean) => void) => {
+    super(async (apiKey: string, done: (arg0: UnauthorizedException, arg1: boolean) => void) => {
       if (this.authService.validateApiKey(apiKey)) {
         done(null, true);
       }
